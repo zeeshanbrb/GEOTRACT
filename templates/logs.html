@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Logs - GeoTrack</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="stylesheet" href="../static/css/modern-design.css">
+</head>
+<body>
+    <!-- Sidebar (same as overview) -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span>📍</span>
+            <span>GeoTrack</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="dashboard.html" class="sidebar-nav-link">
+                        <span>📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="overview.html" class="sidebar-nav-link">
+                        <span>📈</span>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="logs.html" class="sidebar-nav-link active">
+                        <span>📝</span>
+                        <span>Event Logs</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="flows.html" class="sidebar-nav-link">
+                        <span>🔄</span>
+                        <span>User Flows</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="returning-visitors.html" class="sidebar-nav-link">
+                        <span>👥</span>
+                        <span>Returning Visitors</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="sites.html" class="sidebar-nav-link">
+                        <span>🌐</span>
+                        <span>Sites</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="users.html" class="sidebar-nav-link">
+                        <span>👤</span>
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="audit-logs.html" class="sidebar-nav-link">
+                        <span>🔍</span>
+                        <span>Audit Logs</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="integration.html" class="sidebar-nav-link">
+                        <span>🔗</span>
+                        <span>Integration</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="profile.html" class="sidebar-nav-link">
+                        <span>⚙️</span>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div style="margin-top: auto; padding-top: var(--space-8); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                    A
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.875rem; font-weight: 600;" id="user-email">Loading...</div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-tertiary);" id="user-role">...</div>
+                </div>
+            </div>
+            <button onclick="API.logout()" class="btn btn-ghost w-full" style="font-size: 0.875rem;">
+                <span>🚪</span>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header style="margin-bottom: var(--space-8);">
+            <div class="flex items-center justify-between" style="margin-bottom: var(--space-6);">
+                <div>
+                    <h1 style="margin-bottom: var(--space-2);">Event Logs</h1>
+                    <p style="color: var(--color-text-secondary); margin: 0;">Real-time event tracking and monitoring</p>
+                </div>
+                <div class="flex gap-3">
+                    <button class="btn btn-secondary" onclick="exportLogs()">
+                        <span>📥</span>
+                        <span>Export</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="loadLogs()">
+                        <span>🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card" style="padding: var(--space-4);">
+                <div class="grid grid-4 gap-3">
+                    <div>
+                        <label class="form-label" style="margin-bottom: var(--space-2);">Event Type</label>
+                        <select id="filter-event-type" class="form-select" onchange="loadLogs()">
+                            <option value="">All Events</option>
+                            <option value="pageview">Page View</option>
+                            <option value="click">Click</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" style="margin-bottom: var(--space-2);">Country</label>
+                        <select id="filter-country" class="form-select" onchange="loadLogs()">
+                            <option value="">All Countries</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" style="margin-bottom: var(--space-2);">Device</label>
+                        <select id="filter-device" class="form-select" onchange="loadLogs()">
+                            <option value="">All Devices</option>
+                            <option value="desktop">Desktop</option>
+                            <option value="mobile">Mobile</option>
+                            <option value="tablet">Tablet</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label" style="margin-bottom: var(--space-2);">Search</label>
+                        <input type="text" id="filter-search" class="form-input" placeholder="Search URL..." onkeyup="loadLogs()">
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Summary -->
+        <div class="grid grid-4 mb-6">
+            <div class="stat-card">
+                <div class="stat-label">Total Events</div>
+                <div class="stat-value" id="stat-total">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Page Views</div>
+                <div class="stat-value" id="stat-pageviews">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Unique Visitors</div>
+                <div class="stat-value" id="stat-visitors">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Bots Filtered</div>
+                <div class="stat-value" id="stat-bots">-</div>
+            </div>
+        </div>
+
+        <!-- Events Table -->
+        <div class="card">
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Event</th>
+                            <th>URL</th>
+                            <th>Location</th>
+                            <th>Device</th>
+                            <th>Browser</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table-body">
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--color-text-tertiary);">
+                                Loading events...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div style="padding: var(--space-4); border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: between; align-items: center;">
+                <div style="color: var(--color-text-secondary); font-size: 0.875rem;">
+                    Showing <span id="page-info">0</span> events
+                </div>
+                <div class="flex gap-2">
+                    <button class="btn btn-sm btn-secondary" onclick="prevPage()" id="btn-prev">Previous</button>
+                    <button class="btn btn-sm btn-secondary" onclick="nextPage()" id="btn-next">Next</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../static/js/api-client.js"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 50;
+
+        async function initPage() {
+            if (!API.requireAuth()) return;
+            await loadLogs();
+        }
+
+        async function loadLogs() {
+            try {
+                const filters = {
+                    limit: pageSize,
+                    offset: (currentPage - 1) * pageSize
+                };
+
+                const eventType = document.getElementById('filter-event-type').value;
+                const country = document.getElementById('filter-country').value;
+                const deviceType = document.getElementById('filter-device').value;
+                const search = document.getElementById('filter-search').value;
+
+                if (eventType) filters.event_type = eventType;
+                if (country) filters.country = country;
+                if (deviceType) filters.device_type = deviceType;
+                if (search) filters.url = search;
+
+                const data = await API.getLogs(filters);
+                
+                // Update stats
+                document.getElementById('stat-total').textContent = API.formatNumber(data.total || 0);
+                document.getElementById('stat-pageviews').textContent = API.formatNumber(data.pageviews || 0);
+                document.getElementById('stat-visitors').textContent = API.formatNumber(data.unique_visitors || 0);
+                document.getElementById('stat-bots').textContent = API.formatNumber(data.bots_filtered || 0);
+
+                // Update table
+                const tbody = document.getElementById('logs-table-body');
+                if (!data.events || data.events.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--color-text-tertiary);">No events found</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = data.events.map(event => `
+                    <tr>
+                        <td style="white-space: nowrap;">
+                            <div style="font-size: 0.875rem;">${API.formatTime(event.timestamp)}</div>
+                            <div style="font-size: 0.75rem; color: var(--color-text-tertiary);">${API.formatDate(event.timestamp)}</div>
+                        </td>
+                        <td>
+                            <span class="badge badge-primary">${event.event_type}</span>
+                        </td>
+                        <td style="max-width: 300px;">
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${event.url}">
+                                ${event.url || 'Unknown'}
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: var(--space-2);">
+                                <span style="font-size: 1.25rem;">${event.country_code ? API.countryFlag(event.country_code) : '🌍'}</span>
+                                <div>
+                                    <div style="font-size: 0.875rem;">${event.city || 'Unknown'}</div>
+                                    <div style="font-size: 0.75rem; color: var(--color-text-tertiary);">${event.country || 'Unknown'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-${event.device_type === 'mobile' ? 'warning' : 'success'}">
+                                ${event.device_type || 'unknown'}
+                            </span>
+                        </td>
+                        <td style="font-size: 0.875rem;">${event.browser || 'Unknown'}</td>
+                        <td>
+                            ${event.is_bot ? '<span class="badge badge-error">Bot</span>' : '<span class="badge badge-success">Valid</span>'}
+                        </td>
+                    </tr>
+                `).join('');
+
+                // Update pagination
+                const totalEvents = data.total || 0;
+                const startItem = totalEvents > 0 ? (currentPage - 1) * pageSize + 1 : 0;
+                const endItem = Math.min(currentPage * pageSize, totalEvents);
+                document.getElementById('page-info').textContent = `${startItem}-${endItem} of ${totalEvents}`;
+                document.getElementById('btn-prev').disabled = currentPage === 1;
+                document.getElementById('btn-next').disabled = endItem >= totalEvents;
+
+            } catch (error) {
+                console.error('Load logs error:', error);
+                API.showToast('Failed to load logs', 'error');
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                loadLogs();
+            }
+        }
+
+        function nextPage() {
+            currentPage++;
+            loadLogs();
+        }
+
+        async function exportLogs() {
+            try {
+                await API.exportCSV();
+            } catch (error) {
+                API.showToast('Export failed', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

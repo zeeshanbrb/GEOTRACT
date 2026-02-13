@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Overview - GeoTrack</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="stylesheet" href="../static/css/modern-design.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span>📍</span>
+            <span>GeoTrack</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="dashboard.html" class="sidebar-nav-link">
+                        <span>📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="overview.html" class="sidebar-nav-link active">
+                        <span>📈</span>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="logs.html" class="sidebar-nav-link">
+                        <span>📝</span>
+                        <span>Event Logs</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="flows.html" class="sidebar-nav-link">
+                        <span>🔄</span>
+                        <span>User Flows</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="returning-visitors.html" class="sidebar-nav-link">
+                        <span>👥</span>
+                        <span>Returning Visitors</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="sites.html" class="sidebar-nav-link">
+                        <span>🌐</span>
+                        <span>Sites</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="users.html" class="sidebar-nav-link">
+                        <span>👤</span>
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="audit-logs.html" class="sidebar-nav-link">
+                        <span>🔍</span>
+                        <span>Audit Logs</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="integration.html" class="sidebar-nav-link">
+                        <span>🔗</span>
+                        <span>Integration</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="profile.html" class="sidebar-nav-link">
+                        <span>⚙️</span>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div style="margin-top: auto; padding-top: var(--space-8); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                    A
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.875rem; font-weight: 600;" id="user-email">Loading...</div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-tertiary);" id="user-role">...</div>
+                </div>
+            </div>
+            <button onclick="API.logout()" class="btn btn-ghost w-full" style="font-size: 0.875rem;">
+                <span>🚪</span>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header style="margin-bottom: var(--space-8);">
+            <div class="flex items-center justify-between" style="margin-bottom: var(--space-4);">
+                <div>
+                    <h1 style="margin-bottom: var(--space-2);">Analytics Overview</h1>
+                    <p style="color: var(--color-text-secondary); margin: 0;">Comprehensive analytics and insights</p>
+                </div>
+                <div class="flex gap-3">
+                    <select id="site-filter" class="form-select" style="width: auto;">
+                        <option value="">All Sites</option>
+                    </select>
+                    <select id="date-range" class="form-select" style="width: auto;">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                    </select>
+                    <button class="btn btn-secondary" onclick="exportData()">
+                        <span>📥</span>
+                        <span>Export</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="refreshData()">
+                        <span>🔄</span>
+                        <span>Refresh</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Key Metrics -->
+        <div class="grid grid-4 mb-6">
+            <div class="stat-card slide-up">
+                <div class="stat-label">Total Page Views</div>
+                <div class="stat-value" id="metric-pageviews">-</div>
+                <div class="stat-change positive">
+                    <span>↑</span>
+                    <span id="metric-pageviews-change">-</span>
+                </div>
+            </div>
+            
+            <div class="stat-card slide-up" style="animation-delay: 0.1s;">
+                <div class="stat-label">Unique Visitors</div>
+                <div class="stat-value" id="metric-visitors">-</div>
+                <div class="stat-change positive">
+                    <span>↑</span>
+                    <span id="metric-visitors-change">-</span>
+                </div>
+            </div>
+            
+            <div class="stat-card slide-up" style="animation-delay: 0.2s;">
+                <div class="stat-label">Bounce Rate</div>
+                <div class="stat-value" id="metric-bounce">-</div>
+                <div class="stat-change negative">
+                    <span>↓</span>
+                    <span id="metric-bounce-change">-</span>
+                </div>
+            </div>
+            
+            <div class="stat-card slide-up" style="animation-delay: 0.3s;">
+                <div class="stat-label">Avg. Session Duration</div>
+                <div class="stat-value" id="metric-duration">-</div>
+                <div class="stat-change positive">
+                    <span>↑</span>
+                    <span id="metric-duration-change">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visitor Trends Chart -->
+        <div class="card mb-6 slide-up" style="animation-delay: 0.4s;">
+            <h3 style="margin-bottom: var(--space-4);">Visitor Trends</h3>
+            <div style="height: 350px; position: relative;">
+                <canvas id="trendsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Geographic & Device Distribution -->
+        <div class="grid grid-2 mb-6">
+            <div class="card slide-up" style="animation-delay: 0.5s;">
+                <h3 style="margin-bottom: var(--space-4);">Geographic Distribution</h3>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="geoChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card slide-up" style="animation-delay: 0.6s;">
+                <h3 style="margin-bottom: var(--space-4);">Device Types</h3>
+                <div style="height: 300px; position: relative;">
+                    <canvas id="deviceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Pages & Referrers -->
+        <div class="grid grid-2 mb-6">
+            <div class="card slide-up" style="animation-delay: 0.7s;">
+                <h3 style="margin-bottom: var(--space-4);">Top Pages</h3>
+                <div id="top-pages-list">
+                    <div style="text-align: center; padding: var(--space-8); color: var(--color-text-tertiary);">
+                        Loading...
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card slide-up" style="animation-delay: 0.8s;">
+                <h3 style="margin-bottom: var(--space-4);">Top Referrers</h3>
+                <div id="top-referrers-list">
+                    <div style="text-align: center; padding: var(--space-8); color: var(--color-text-tertiary);">
+                        Loading...
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Browser & OS Stats -->
+        <div class="grid grid-2 mb-6">
+            <div class="card slide-up" style="animation-delay: 0.9s;">
+                <h3 style="margin-bottom: var(--space-4);">Top Browsers</h3>
+                <div id="browsers-list">Loading...</div>
+            </div>
+            
+            <div class="card slide-up" style="animation-delay: 1s;">
+                <h3 style="margin-bottom: var(--space-4);">Operating Systems</h3>
+                <div id="os-list">Loading...</div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../static/js/api-client.js"></script>
+    <script>
+        let trendsChart, geoChart, deviceChart;
+
+        async function initPage() {
+            if (!API.requireAuth()) return;
+            
+            await loadOverview();
+            await initCharts();
+        }
+
+        async function loadOverview() {
+            try {
+                const data = await API.getOverview();
+                
+                // Update metrics
+                document.getElementById('metric-pageviews').textContent = API.formatNumber(data.pageviews || 0);
+                document.getElementById('metric-visitors').textContent = API.formatNumber(data.unique_visitors || 0);
+                document.getElementById('metric-bounce').textContent = (data.bounce_rate || 42) + '%';
+                document.getElementById('metric-duration').textContent = (data.avg_session_duration || 145) + 's';
+                
+                // Mock changes
+                document.getElementById('metric-pageviews-change').textContent = '+12%';
+                document.getElementById('metric-visitors-change').textContent = '+8%';
+                document.getElementById('metric-bounce-change').textContent = '-5%';
+                document.getElementById('metric-duration-change').textContent = '+7%';
+                
+                // Load top pages
+                if (data.top_pages) {
+                    const pagesHtml = data.top_pages.slice(0, 10).map((page, i) => `
+                        <div style="padding: var(--space-3); border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center; gap: var(--space-3);">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: white;">
+                                ${i + 1}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${page.url}
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--color-text-tertiary);">
+                                    ${API.formatNumber(page.views)} views
+                                </div>
+                            </div>
+                            <div style="width: 100px; height: 4px; background: var(--color-bg-tertiary); border-radius: var(--radius-full); overflow: hidden;">
+                                <div style="width: ${Math.min(100, (page.views / data.top_pages[0].views) * 100)}%; height: 100%; background: var(--gradient-primary);"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                    document.getElementById('top-pages-list').innerHTML = pagesHtml;
+                }
+                
+                // Load top referrers
+                if (data.top_referrers) {
+                    const referrersHtml = data.top_referrers.slice(0, 10).map((ref, i) => `
+                        <div style="padding: var(--space-3); border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; align-items: center; gap: var(--space-3);">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--gradient-secondary); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: white;">
+                                ${i + 1}
+                            </div>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 0.875rem; font-weight: 600; color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${ref.referrer || 'Direct'}
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--color-text-tertiary);">
+                                    ${API.formatNumber(ref.count)} visitors
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    document.getElementById('top-referrers-list').innerHTML = referrersHtml;
+                }
+                
+                // Load browsers
+                if (data.top_browsers) {
+                    const browsersHtml = data.top_browsers.slice(0, 5).map(b => `
+                        <div style="padding: var(--space-2) 0; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">${b.browser}</span>
+                            <span class="badge badge-primary">${API.formatNumber(b.count)}</span>
+                        </div>
+                    `).join('');
+                    document.getElementById('browsers-list').innerHTML = browsersHtml;
+                }
+                
+                // Load OS
+                if (data.top_os) {
+                    const osHtml = data.top_os.slice(0, 5).map(os => `
+                        <div style="padding: var(--space-2) 0; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.875rem;">${os.os}</span>
+                            <span class="badge badge-success">${API.formatNumber(os.count)}</span>
+                        </div>
+                    `).join('');
+                    document.getElementById('os-list').innerHTML = osHtml;
+                }
+                
+            } catch (error) {
+                console.error('Load overview error:', error);
+                API.showToast('Failed to load analytics', 'error');
+            }
+        }
+
+        async function initCharts() {
+            try {
+                // Trends Chart
+                const trendData = await API.getTrends({ days: 30 });
+                const ctx1 = document.getElementById('trendsChart').getContext('2d');
+                trendsChart = new Chart(ctx1, {
+                    type: 'line',
+                    data: {
+                        labels: trendData.map(d => new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                        datasets: [{
+                            label: 'Page Views',
+                            data: trendData.map(d => d.pageviews),
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }, {
+                            label: 'Unique Visitors',
+                            data: trendData.map(d => d.unique_visitors),
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { labels: { color: '#cbd5e1' } }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                            },
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                            }
+                        }
+                    }
+                });
+                
+                // Geographic Chart
+                const geoData = await API.getGeo();
+                const topCountries = geoData.slice(0, 8);
+                const ctx2 = document.getElementById('geoChart').getContext('2d');
+                geoChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: topCountries.map(d => d.country),
+                        datasets: [{
+                            label: 'Visitors',
+                            data: topCountries.map(d => d.visitors),
+                            backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#14b8a6']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                            },
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+                
+                // Device Chart
+                const ctx3 = document.getElementById('deviceChart').getContext('2d');
+                deviceChart = new Chart(ctx3, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Desktop', 'Mobile', 'Tablet'],
+                        datasets: [{
+                            data: [45, 40, 15],
+                            backgroundColor: ['#3b82f6', '#8b5cf6', '#10b981']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { color: '#cbd5e1', padding: 15 }
+                            }
+                        }
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Init charts error:', error);
+            }
+        }
+
+        async function refreshData() {
+            API.showLoader();
+            try {
+                await loadOverview();
+                API.showToast('Data refreshed', 'success');
+            } finally {
+                API.hideLoader();
+            }
+        }
+
+        async function exportData() {
+            try {
+                await API.exportCSV();
+            } catch (error) {
+                API.showToast('Export failed', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

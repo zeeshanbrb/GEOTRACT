@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Returning Visitors - GeoTrack</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="stylesheet" href="../static/css/modern-design.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span>📍</span>
+            <span>GeoTrack</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="dashboard.html" class="sidebar-nav-link">
+                        <span>📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="overview.html" class="sidebar-nav-link">
+                        <span>📈</span>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="logs.html" class="sidebar-nav-link">
+                        <span>📝</span>
+                        <span>Event Logs</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="flows.html" class="sidebar-nav-link"><span>🔄</span><span>User Flows</span></a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="returning-visitors.html" class="sidebar-nav-link active"><span>👥</span><span>Returning Visitors</span></a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="sites.html" class="sidebar-nav-link">
+                        <span>🌐</span>
+                        <span>Sites</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="users.html" class="sidebar-nav-link">
+                        <span>👤</span>
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="audit-logs.html" class="sidebar-nav-link">
+                        <span>🔍</span>
+                        <span>Audit Logs</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="integration.html" class="sidebar-nav-link">
+                        <span>🔗</span>
+                        <span>Integration</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="profile.html" class="sidebar-nav-link">
+                        <span>⚙️</span>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div style="margin-top: auto; padding-top: var(--space-8); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                    A
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.875rem; font-weight: 600;" id="user-email">Loading...</div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-tertiary);" id="user-role">...</div>
+                </div>
+            </div>
+            <button onclick="API.logout()" class="btn btn-ghost w-full" style="font-size: 0.875rem;">
+                <span>🚪</span>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header style="margin-bottom: var(--space-8);">
+            <h1 style="margin-bottom: var(--space-2);">Returning Visitors</h1>
+            <p style="color: var(--color-text-secondary); margin: 0;">Track visitor loyalty and retention patterns</p>
+        </header>
+
+        <!-- Stats -->
+        <div class="grid grid-4 mb-6">
+            <div class="stat-card">
+                <div class="stat-label">Returning Visitors</div>
+                <div class="stat-value" id="total-returning">-</div>
+                <div class="stat-change positive">
+                    <span>↑</span>
+                    <span>+12.5%</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Visits per User</div>
+                <div class="stat-value" id="avg-visits">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Retention Rate</div>
+                <div class="stat-value" id="retention-rate">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Loyal Visitors (5+)</div>
+                <div class="stat-value" id="loyal-visitors">-</div>
+            </div>
+        </div>
+
+        <!-- Frequency Chart -->
+        <div class="card mb-6">
+            <h3 style="margin-bottom: var(--space-4);">Visit Frequency Distribution</h3>
+            <div style="height: 300px; position: relative;">
+                <canvas id="frequencyChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Returning Visitors Table -->
+        <div class="card">
+            <div class="flex items-center justify-between mb-4">
+                <h3 style="margin: 0;">Top Returning Visitors</h3>
+                <select class="form-select" style="width: auto;" id="sort-by" onchange="loadData()">
+                    <option value="visits">Most Visits</option>
+                    <option value="recent">Most Recent</option>
+                    <option value="countries">Most Countries</option>
+                </select>
+            </div>
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Visitor</th>
+                            <th>Total Visits</th>
+                            <th>Countries</th>
+                            <th>First Seen</th>
+                            <th>Last Seen</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="visitors-table">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: var(--space-8); color: var(--color-text-tertiary);">
+                                Loading visitors...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script src="../static/js/api-client.js"></script>
+    <script>
+        let frequencyChart = null;
+
+        async function initPage() {
+            if (!API.requireAuth()) return;
+            await loadData();
+        }
+
+        async function loadData() {
+            try {
+                const data = await API.getReturningVisitors({ days: 30 });
+                
+                // Update stats
+                document.getElementById('total-returning').textContent = API.formatNumber(data.total_returning || 0);
+                
+                if (data.visitors && data.visitors.length > 0) {
+                    const avgVisits = data.visitors.reduce((sum, v) => sum + v.visit_count, 0) / data.visitors.length;
+                    document.getElementById('avg-visits').textContent = avgVisits.toFixed(1);
+                    
+                    const loyalCount = data.visitors.filter(v => v.visit_count >= 5).length;
+                    document.getElementById('loyal-visitors').textContent = API.formatNumber(loyalCount);
+                    
+                    const retentionRate = ((data.total_returning / (data.total_returning + (data.total_new || 100))) * 100).toFixed(1);
+                    document.getElementById('retention-rate').textContent = retentionRate + '%';
+                    
+                    renderTable(data.visitors);
+                    renderChart(data.visitors);
+                }
+                
+            } catch (error) {
+                console.error('Load data error:', error);
+                API.showToast('Failed to load data', 'error');
+            }
+        }
+
+        function renderTable(visitors) {
+            const tbody = document.getElementById('visitors-table');
+            
+            tbody.innerHTML = visitors.slice(0, 50).map(visitor => {
+                const daysSinceFirst = Math.floor((new Date() - new Date(visitor.first_seen)) / (1000 * 60 * 60 * 24));
+                const loyalty = visitor.visit_count >= 10 ? 'gold' : visitor.visit_count >= 5 ? 'silver' : 'bronze';
+                const loyaltyBadge = loyalty === 'gold' ? '🥇' : loyalty === 'silver' ? '🥈' : '🥉';
+                
+                return `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: var(--space-3);">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-secondary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.875rem;">
+                                    ${visitor.visitor_hash ? visitor.visitor_hash.substring(0, 2).toUpperCase() : 'V'}
+                                </div>
+                                <div>
+                                    <div><code style="font-size: 0.75rem;">${visitor.visitor_hash ? visitor.visitor_hash.substring(0, 8) : 'unknown'}...</code></div>
+                                    <small style="color: var(--color-text-tertiary);">${daysSinceFirst} days active</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <strong style="font-size: 1.25rem;">${visitor.visit_count}</strong>
+                            <small style="color: var(--color-text-tertiary);"> visits</small>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: var(--space-1);">
+                                ${visitor.countries ? visitor.countries.slice(0, 3).map(c => API.countryFlag(c)).join('') : '🌍'}
+                                ${visitor.countries && visitor.countries.length > 3 ? `<span class="badge badge-sm">+${visitor.countries.length - 3}</span>` : ''}
+                            </div>
+                        </td>
+                        <td style="font-size: 0.875rem;">${API.formatDate(visitor.first_seen)}</td>
+                        <td>
+                            <div style="font-size: 0.875rem;">${API.formatRelativeTime(visitor.last_seen)}</div>
+                            <small style="color: var(--color-text-tertiary);">${API.formatDate(visitor.last_seen)}</small>
+                        </td>
+                        <td>
+                            <span class="badge badge-${loyalty === 'gold' ? 'warning' : loyalty === 'silver' ? 'secondary' : 'primary'}">
+                                ${loyaltyBadge} ${loyalty.toUpperCase()}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderChart(visitors) {
+            const ctx = document.getElementById('frequencyChart').getContext('2d');
+            
+            // Group by visit count ranges
+            const ranges = {
+                '2-3 visits': visitors.filter(v => v.visit_count >= 2 && v.visit_count <= 3).length,
+                '4-5 visits': visitors.filter(v => v.visit_count >= 4 && v.visit_count <= 5).length,
+                '6-10 visits': visitors.filter(v => v.visit_count >= 6 && v.visit_count <= 10).length,
+                '11-20 visits': visitors.filter(v => v.visit_count >= 11 && v.visit_count <= 20).length,
+                '20+ visits': visitors.filter(v => v.visit_count > 20).length
+            };
+            
+            if (frequencyChart) {
+                frequencyChart.destroy();
+            }
+            
+            frequencyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(ranges),
+                    datasets: [{
+                        label: 'Number of Visitors',
+                        data: Object.values(ranges),
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.5)',
+                            'rgba(139, 92, 246, 0.5)',
+                            'rgba(16, 185, 129, 0.5)',
+                            'rgba(245, 158, 11, 0.5)',
+                            'rgba(239, 68, 68, 0.5)'
+                        ],
+                        borderColor: [
+                            '#3b82f6',
+                            '#8b5cf6',
+                            '#10b981',
+                            '#f59e0b',
+                            '#ef4444'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(30, 41, 59, 0.95)',
+                            titleColor: '#fff',
+                            bodyColor: '#fff'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94a3b8' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GeoTrack Analytics{% endblock %}</title>
+    
+    <link rel="stylesheet" href="/static/css/design-system.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div id="global-loader" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div class="loading-spinner" style="width: 50px; height: 50px;"></div>
+    </div>
+
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <a href="/templates/overview.html" class="logo" style="text-decoration: none; color: inherit;">
+                <span style="font-size: 1.5rem;">📊</span><span>GeoTrack</span>
+            </a>
+        </div>
+
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">ANALYTICS</div>
+                <a href="/templates/overview.html" class="nav-item sidebar-nav-link"><span class="nav-icon">📈</span><span>Overview</span></a>
+                <a href="/templates/geo.html" class="nav-item sidebar-nav-link"><span class="nav-icon">🌍</span><span>Geographic</span></a>
+                <a href="/templates/trends.html" class="nav-item sidebar-nav-link"><span class="nav-icon">📊</span><span>Trends</span></a>
+                <a href="/templates/flows.html" class="nav-item sidebar-nav-link"><span class="nav-icon">🔀</span><span>Flows</span></a>
+                <a href="/templates/returning-visitors.html" class="nav-item sidebar-nav-link"><span class="nav-icon">🔄</span><span>Returning</span></a>
+                <a href="/templates/live.html" class="nav-item sidebar-nav-link"><span class="nav-icon">📡</span><span>Live Feed</span></a>
+                <a href="/templates/logs.html" class="nav-item sidebar-nav-link"><span class="nav-icon">📋</span><span>Event Logs</span></a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">SITES</div>
+                <a href="/templates/sites.html" class="nav-item sidebar-nav-link"><span class="nav-icon">🌐</span><span>My Sites</span></a>
+                <a href="/templates/integration.html" class="nav-item sidebar-nav-link"><span class="nav-icon">🔌</span><span>Integration</span></a>
+            </div>
+
+            <div class="nav-section admin-only" id="admin-section" style="display: none;">
+                <div class="nav-section-title">ADMIN</div>
+                <a href="/templates/dashboard.html" class="nav-item sidebar-nav-link"><span class="nav-icon">👑</span><span>Dashboard</span></a>
+                <a href="/templates/clients.html" class="nav-item sidebar-nav-link"><span class="nav-icon">🏢</span><span>Clients</span></a>
+                <a href="/templates/users.html" class="nav-item sidebar-nav-link"><span class="nav-icon">👥</span><span>Users</span></a>
+                <a href="/templates/audit-logs.html" class="nav-item sidebar-nav-link"><span class="nav-icon">📜</span><span>Audit Logs</span></a>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">SETTINGS</div>
+                <a href="/templates/profile.html" class="nav-item sidebar-nav-link"><span class="nav-icon">⚙️</span><span>Profile</span></a>
+            </div>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-user">
+                <div class="avatar" id="user-avatar">A</div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name" id="user-name">Loading...</div>
+                    <div class="sidebar-user-role" id="user-role">...</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <div class="breadcrumb">{% block breadcrumb %}<span>Dashboard</span>{% endblock %}</div>
+            <div class="topbar-actions">
+                <button class="btn btn-icon" onclick="toggleTheme()" title="Toggle theme">
+                    <span id="theme-icon">🌙</span>
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-icon dropdown-toggle" onclick="toggleDropdown('user-menu')">
+                        <div class="avatar" id="topbar-avatar">A</div>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" id="user-menu">
+                        <a href="/templates/profile.html" class="dropdown-item"><span>⚙️</span><span>Profile</span></a>
+                        <div class="dropdown-divider"></div>
+                        <a href="#" onclick="API.logout(); return false;" class="dropdown-item text-danger"><span>🚪</span><span>Logout</span></a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="content">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script src="/static/js/api-client.js"></script>
+    <script>
+        async function loadUserInfo() {
+            try {
+                const user = await API.getMe();
+                if (!user) return; // Handle logged out state
+
+                const initial = (user.full_name || user.email || 'U').charAt(0).toUpperCase();
+                
+                // Safe checks for elements before setting content
+                const avatarEl = document.getElementById('user-avatar');
+                if (avatarEl) avatarEl.textContent = initial;
+                
+                const topbarAvatarEl = document.getElementById('topbar-avatar');
+                if (topbarAvatarEl) topbarAvatarEl.textContent = initial;
+                
+                const nameEl = document.getElementById('user-name');
+                if (nameEl) nameEl.textContent = user.full_name || user.email || 'User';
+                
+                const roleEl = document.getElementById('user-role');
+                if (roleEl) roleEl.textContent = (user.role || '').toUpperCase();
+                
+                // Show/Hide Admin Section
+                const adminSection = document.getElementById('admin-section');
+                if (adminSection) {
+                    if (user.role === 'admin') {
+                        adminSection.style.display = 'block';
+                    } else {
+                        adminSection.style.display = 'none';
+                    }
+                }
+            } catch (error) { 
+                console.error('Failed to load user:', error); 
+                // Optional: Redirect to login if auth fails
+                // window.location.href = '/login.html';
+            }
+        }
+
+        function toggleDropdown(id) {
+            const menu = document.getElementById(id);
+            if (!menu) return;
+            menu.classList.toggle('show');
+            
+            // Clean up event listener to prevent multiple bindings
+            const close = function(e) {
+                if (!e.target.closest('.dropdown')) {
+                    menu.classList.remove('show');
+                    document.removeEventListener('click', close);
+                }
+            };
+            document.addEventListener('click', close);
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const theme = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            const icon = document.getElementById('theme-icon');
+            if (icon) icon.textContent = theme === 'dark' ? '🌙' : '☀️';
+        }
+
+        // Initialize
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        const icon = document.getElementById('theme-icon');
+        if (icon) icon.textContent = savedTheme === 'dark' ? '🌙' : '☀️';
+
+        document.addEventListener('DOMContentLoaded', () => { 
+            loadUserInfo(); 
+            // Highlight active menu item
+            if (window.API && window.API.initSidebar) {
+                window.API.initSidebar();
+            }
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

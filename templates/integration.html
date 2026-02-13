@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integration & Setup - GeoTrack Analytics</title>
+    <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+    <link rel="stylesheet" href="../static/css/modern-design.css">
+    <style>
+        .integration-step {
+            padding: var(--space-6);
+            background: var(--color-bg-secondary);
+            border-radius: var(--radius-lg);
+            border-left: 4px solid var(--color-primary);
+            margin-bottom: var(--space-4);
+        }
+        .integration-step h4 {
+            margin: 0 0 var(--space-3) 0;
+            color: var(--color-primary);
+        }
+        .code-block {
+            position: relative;
+            background: #0f1419;
+            padding: var(--space-4);
+            border-radius: var(--radius-md);
+            margin: var(--space-3) 0;
+        }
+        .code-block code {
+            color: #e6edf3;
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+        .copy-btn {
+            position: absolute;
+            top: var(--space-2);
+            right: var(--space-2);
+        }
+        .security-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            color: #22c55e;
+            margin-right: var(--space-2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span>📍</span>
+            <span>GeoTrack</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <ul>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="dashboard.html" class="sidebar-nav-link">
+                        <span>📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="overview.html" class="sidebar-nav-link">
+                        <span>📈</span>
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="logs.html" class="sidebar-nav-link">
+                        <span>📝</span>
+                        <span>Event Logs</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="flows.html" class="sidebar-nav-link">
+                        <span>🔄</span>
+                        <span>User Flows</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="returning-visitors.html" class="sidebar-nav-link">
+                        <span>👥</span>
+                        <span>Returning Visitors</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="sites.html" class="sidebar-nav-link">
+                        <span>🌐</span>
+                        <span>Sites</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="users.html" class="sidebar-nav-link">
+                        <span>👤</span>
+                        <span>Users</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="audit-logs.html" class="sidebar-nav-link">
+                        <span>🔍</span>
+                        <span>Audit Logs</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item admin-only">
+                    <a href="integration.html" class="sidebar-nav-link active">
+                        <span>🔗</span>
+                        <span>Integration</span>
+                    </a>
+                </li>
+                <li class="sidebar-nav-item">
+                    <a href="profile.html" class="sidebar-nav-link">
+                        <span>⚙️</span>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div style="margin-top: auto; padding-top: var(--space-8); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+            <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                    A
+                </div>
+                <div style="flex: 1;">
+                    <div style="font-size: 0.875rem; font-weight: 600;" id="user-email">Loading...</div>
+                    <div style="font-size: 0.75rem; color: var(--color-text-tertiary);" id="user-role">...</div>
+                </div>
+            </div>
+            <button onclick="API.logout()" class="btn btn-ghost w-full" style="font-size: 0.875rem;">
+                <span>🚪</span>
+                <span>Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header style="margin-bottom: var(--space-8);">
+            <h1 style="margin-bottom: var(--space-2);">🔗 Integration & Setup</h1>
+            <p style="color: var(--color-text-secondary); margin: 0;">Integrate GeoTrack Analytics with your website in minutes</p>
+        </header>
+
+        <!-- Site Selector -->
+        <div class="card mb-6">
+            <h3 style="margin-bottom: var(--space-4);">Select Website</h3>
+            <select id="site-selector" class="form-select" onchange="loadIntegration()">
+                <option value="">Loading sites...</option>
+            </select>
+            <p style="margin-top: var(--space-3); font-size: 0.875rem; color: var(--color-text-tertiary);">
+                Don't see your site? <a href="sites.html" style="color: var(--color-primary);">Add a new site</a>
+            </p>
+        </div>
+
+        <!-- Integration Status -->
+        <div class="grid grid-3 mb-6">
+            <div class="stat-card">
+                <div class="stat-label">Integration Status</div>
+                <div class="stat-value" id="integration-status" style="font-size: 1.25rem;">⏳ Pending</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Total Events Tracked</div>
+                <div class="stat-value" id="total-events">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Last Event Received</div>
+                <div class="stat-value" id="last-event" style="font-size: 1rem;">Never</div>
+            </div>
+        </div>
+
+        <!-- Security Features -->
+        <div class="card mb-6">
+            <h3 style="margin-bottom: var(--space-4);">🔒 Security Features</h3>
+            <div class="grid grid-2 gap-4">
+                <div class="security-badge">
+                    <span>✓</span>
+                    <span>Privacy-First Tracking</span>
+                </div>
+                <div class="security-badge">
+                    <span>✓</span>
+                    <span>No Cookies Required</span>
+                </div>
+                <div class="security-badge">
+                    <span>✓</span>
+                    <span>IP Hashing</span>
+                </div>
+                <div class="security-badge">
+                    <span>✓</span>
+                    <span>Bot Filtering</span>
+                </div>
+                <div class="security-badge">
+                    <span>✓</span>
+                    <span>GDPR Compliant</span>
+                </div>
+                <div class="security-badge">
+                    <span>✓</span>
+                    <span>DNT Respect</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integration Methods -->
+        <div class="card mb-6">
+            <h3 style="margin-bottom: var(--space-6);">📦 Integration Methods</h3>
+
+            <!-- Method 1: JavaScript Tracking -->
+            <div class="integration-step">
+                <h4>Method 1: JavaScript Tracking (Recommended)</h4>
+                <p style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">
+                    Full-featured tracking with automatic pageviews, outbound links, and custom events.
+                </p>
+                
+                <strong style="display: block; margin-bottom: var(--space-2);">Installation:</strong>
+                <p style="font-size: 0.875rem; color: var(--color-text-secondary); margin-bottom: var(--space-3);">
+                    Add this code before the closing <code>&lt;/body&gt;</code> tag on every page:
+                </p>
+                
+                <div class="code-block">
+                    <button class="btn btn-sm btn-primary copy-btn" onclick="copyCode('js-snippet')">
+                        📋 Copy
+                    </button>
+                    <pre id="js-snippet"><code>&lt;!-- GeoTrack Analytics --&gt;
+&lt;script src="<span id="js-url">Loading...</span>" 
+        data-site-key="<span id="js-key">YOUR_SITE_KEY</span>"
+        data-api-url="<span id="api-url">http://localhost:8000</span>"&gt;&lt;/script&gt;</code></pre>
+                </div>
+
+                <strong style="display: block; margin: var(--space-4) 0 var(--space-2) 0;">Track Custom Events:</strong>
+                <div class="code-block">
+                    <button class="btn btn-sm btn-primary copy-btn" onclick="copyCode('custom-events')">
+                        📋 Copy
+                    </button>
+                    <pre id="custom-events"><code>// Track button clicks
+GeoTrack.track('button_click', {
+  button_name: 'Subscribe',
+  location: 'homepage'
+});
+
+// Track form submissions
+GeoTrack.track('form_submit', {
+  form_name: 'contact',
+  success: true
+});</code></pre>
+                </div>
+            </div>
+
+            <!-- Method 2: Pixel Tracking -->
+            <div class="integration-step">
+                <h4>Method 2: Pixel Tracking</h4>
+                <p style="color: var(--color-text-secondary); margin-bottom: var(--space-4);">
+                    Lightweight tracking using a 1x1 transparent image. Perfect for emails or simple page tracking.
+                </p>
+                
+                <strong style="display: block; margin-bottom: var(--space-2);">Installation:</strong>
+                <div class="code-block">
+                    <button class="btn btn-sm btn-primary copy-btn" onclick="copyCode('pixel-snippet')">
+                        📋 Copy
+                    </button>
+                    <pre id="pixel-snippet"><code>&lt;img src="<span id="pixel-url">http://localhost:8000/api/v1/collect/pixel?site_key=YOUR_SITE_KEY</span>" 
+     width="1" height="1" alt="" style="display:none;" /&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Process -->
+        <div class="card mb-6">
+            <h3 style="margin-bottom: var(--space-6);">✅ Verification Process</h3>
+
+            <div class="integration-step">
+                <h4>Step 1: Install Tracking Code</h4>
+                <p style="color: var(--color-text-secondary);">
+                    Copy the JavaScript snippet above and paste it into your website's HTML, just before the closing <code>&lt;/body&gt;</code> tag.
+                </p>
+            </div>
+
+            <div class="integration-step">
+                <h4>Step 2: Deploy Your Website</h4>
+                <p style="color: var(--color-text-secondary);">
+                    Deploy your updated website to your local development server or production environment.
+                </p>
+            </div>
+
+            <div class="integration-step">
+                <h4>Step 3: Visit Your Website</h4>
+                <p style="color: var(--color-text-secondary);">
+                    Open your website in a browser and navigate through a few pages to generate test events.
+                </p>
+            </div>
+
+            <div class="integration-step">
+                <h4>Step 4: Verify Events</h4>
+                <p style="color: var(--color-text-secondary); margin-bottom: var(--space-3);">
+                    Check if events are being received:
+                </p>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="padding: var(--space-2) 0; display: flex; align-items: center; gap: var(--space-2);">
+                        <span style="color: var(--color-primary);">1.</span>
+                        <span>Go to <a href="logs.html" style="color: var(--color-primary);">Event Logs</a> page</span>
+                    </li>
+                    <li style="padding: var(--space-2) 0; display: flex; align-items: center; gap: var(--space-2);">
+                        <span style="color: var(--color-primary);">2.</span>
+                        <span>Look for pageview events from your website</span>
+                    </li>
+                    <li style="padding: var(--space-2) 0; display: flex; align-items: center; gap: var(--space-2);">
+                        <span style="color: var(--color-primary);">3.</span>
+                        <span>Events should appear within 30 seconds</span>
+                    </li>
+                    <li style="padding: var(--space-2) 0; display: flex; align-items: center; gap: var(--space-2);">
+                        <span style="color: var(--color-primary);">4.</span>
+                        <span>Check browser console for any errors (F12)</span>
+                    </li>
+                </ul>
+                <button class="btn btn-primary" onclick="window.location.href='logs.html'" style="margin-top: var(--space-4);">
+                    View Event Logs →
+                </button>
+            </div>
+
+            <div class="integration-step">
+                <h4>Step 5: Monitor Dashboard</h4>
+                <p style="color: var(--color-text-secondary);">
+                    Once events are flowing, visit the <a href="overview.html" style="color: var(--color-primary);">Analytics Overview</a> to see real-time statistics and insights.
+                </p>
+            </div>
+        </div>
+
+        <!-- Troubleshooting -->
+        <div class="card">
+            <h3 style="margin-bottom: var(--space-6);">🔧 Troubleshooting</h3>
+
+            <div style="margin-bottom: var(--space-4);">
+                <strong style="display: block; margin-bottom: var(--space-2);">No events appearing?</strong>
+                <ul style="padding-left: var(--space-6); color: var(--color-text-secondary); line-height: 1.8;">
+                    <li>Verify the site key is correct</li>
+                    <li>Check browser console (F12) for JavaScript errors</li>
+                    <li>Ensure backend server is running on port 8000</li>
+                    <li>Verify CORS is enabled in backend</li>
+                    <li>Check network tab for failed requests</li>
+                </ul>
+            </div>
+
+            <div style="margin-bottom: var(--space-4);">
+                <strong style="display: block; margin-bottom: var(--space-2);">Events not tracking correctly?</strong>
+                <ul style="padding-left: var(--space-6); color: var(--color-text-secondary); line-height: 1.8;">
+                    <li>Enable debug mode: <code>data-debug="true"</code></li>
+                    <li>Check if bot filtering is blocking legitimate traffic</li>
+                    <li>Verify API URL is correct for your environment</li>
+                </ul>
+            </div>
+
+            <div>
+                <strong style="display: block; margin-bottom: var(--space-2);">Need help?</strong>
+                <p style="color: var(--color-text-secondary);">
+                    Check the <a href="audit-logs.html" style="color: var(--color-primary);">Audit Logs</a> for system events or contact your administrator.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script src="../static/js/api-client.js"></script>
+    <script>
+        let currentSiteKey = '';
+        let currentSite = null;
+
+        async function initPage() {
+            if (!API.requireAuth()) return;
+            await loadSites();
+        }
+
+        async function loadSites() {
+            try {
+                const data = await API.getSites();
+                
+                const selector = document.getElementById('site-selector');
+                if (!data || data.length === 0) {
+                    selector.innerHTML = '<option value="">No sites available - Add a site first</option>';
+                    return;
+                }
+
+                selector.innerHTML = data.map(site => 
+                    `<option value="${site.id}" data-key="${site.site_key || site.public_key}">${site.domain} (${site.name || 'Unnamed'})</option>`
+                ).join('');
+
+                if (data.length > 0) {
+                    loadIntegration();
+                }
+            } catch (error) {
+                console.error('Load sites error:', error);
+                API.showToast('Failed to load sites', 'error');
+            }
+        }
+
+        async function loadIntegration() {
+            const selector = document.getElementById('site-selector');
+            const selectedOption = selector.options[selector.selectedIndex];
+            
+            if (!selectedOption || !selectedOption.value) return;
+
+            const siteId = selectedOption.value;
+            currentSiteKey = selectedOption.getAttribute('data-key') || '';
+
+            // Detect environment
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const baseUrl = isLocal ? 'http://localhost:8000' : window.location.origin;
+            const frontendUrl = isLocal ? 'http://localhost:8080' : window.location.origin;
+            const scriptUrl = `${frontendUrl}/static/js/geotrack.js`;
+
+            // Update JavaScript snippet
+            document.getElementById('js-url').textContent = scriptUrl;
+            document.getElementById('js-key').textContent = currentSiteKey;
+            document.getElementById('api-url').textContent = baseUrl;
+
+            // Update Pixel snippet
+            document.getElementById('pixel-url').textContent = `${baseUrl}/api/v1/collect/pixel?site_key=${currentSiteKey}`;
+
+            // Get site stats
+            try {
+                const sites = await API.getSites();
+                currentSite = sites.find(s => s.id == siteId);
+                
+                if (currentSite) {
+                    const totalEvents = currentSite.total_events || 0;
+                    const status = totalEvents > 0 ? 'connected' : 'pending';
+                    
+                    document.getElementById('integration-status').innerHTML = 
+                        totalEvents > 0 
+                            ? '<span style="color: #22c55e;">✓ Active</span>' 
+                            : '<span style="color: #f59e0b;">⏳ Pending</span>';
+                    
+                    document.getElementById('total-events').textContent = API.formatNumber(totalEvents);
+                    
+                    document.getElementById('last-event').textContent = 
+                        currentSite.last_seen_at 
+                            ? API.formatRelativeTime(currentSite.last_seen_at)
+                            : 'No events yet';
+                }
+            } catch (error) {
+                console.error('Failed to load site stats:', error);
+            }
+        }
+
+        function copyCode(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent;
+            API.copyToClipboard(text);
+        }
+
+        document.addEventListener('DOMContentLoaded', initPage);
+    </script>
+</body>
+</html>

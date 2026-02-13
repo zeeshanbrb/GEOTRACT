@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GeoTrack Analytics</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="static/css/modern-design.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: var(--space-6);
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 480px;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .login-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(30px);
+            border-radius: var(--radius-2xl);
+            padding: var(--space-12);
+            box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .login-logo {
+            font-size: 5rem;
+            text-align: center;
+            margin-bottom: var(--space-6);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .login-title {
+            font-size: 2.5rem;
+            text-align: center;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--space-3);
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: var(--color-text-secondary);
+            margin-bottom: var(--space-8);
+        }
+
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--color-error);
+            color: var(--color-error);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-6);
+            display: none;
+            animation: shake 0.5s;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .form-check {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            cursor: pointer;
+        }
+
+        .form-check-input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .form-check-label {
+            font-size: 0.875rem;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-logo">📍</div>
+            <h1 class="login-title">GeoTrack Analytics</h1>
+            <p class="login-subtitle">Privacy-first website analytics platform</p>
+
+            <div id="error-message" class="error-message"></div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-input"
+                        placeholder="admin@geotrack.com"
+                        required
+                        autocomplete="email"
+                        autofocus
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="form-input"
+                        placeholder="••••••••"
+                        required
+                        autocomplete="current-password"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-check">
+                        <input type="checkbox" id="remember" class="form-check-input" />
+                        <span class="form-check-label">Remember me</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-full">
+                    Sign In
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: var(--space-8); padding-top: var(--space-6); border-top: 1px solid rgba(255, 255, 255, 0.05);">
+                <p style="font-size: 0.875rem; color: var(--color-text-tertiary); margin: 0;">
+                    © 2026 GeoTrack Analytics. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="static/js/api-client.js"></script>
+    <script>
+        // Auto-redirect if already logged in
+        if (API.isAuthenticated()) {
+            const user = API.getUser();
+            if (user.role === 'admin') {
+                window.location.href = 'templates/dashboard.html';
+            } else {
+                window.location.href = 'templates/overview.html';
+            }
+        }
+
+        const form = document.getElementById('login-form');
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const errorMessage = document.getElementById('error-message');
+
+        // Pre-fill default credentials for demo
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            document.getElementById('email').value = 'admin@geotrack.com';
+            document.getElementById('password').value = 'Admin@123456';
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span style="display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite;"></span>';
+            errorMessage.classList.remove('show');
+
+            try {
+                const data = await API.login(email, password);
+
+                // Role-based redirect
+                const user = data.user;
+                if (user.role === 'admin') {
+                    window.location.href = 'templates/dashboard.html';
+                } else {
+                    window.location.href = 'templates/overview.html';
+                }
+            } catch (error) {
+                // Show error
+                errorMessage.textContent = error.message || 'Invalid email or password';
+                errorMessage.classList.add('show');
+
+                // Reset button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In';
+
+                // Clear password field
+                document.getElementById('password').value = '';
+                document.getElementById('password').focus();
+            }
+        });
+
+        // Clear error on input
+        ['email', 'password'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                errorMessage.classList.remove('show');
+            });
+        });
+    </script>
+</body>
+</html>

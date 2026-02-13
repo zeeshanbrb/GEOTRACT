@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="GeoTrack Analytics - Privacy-first website analytics"
+    />
+    <title>Login - GeoTrack Analytics</title>
+    <link rel="stylesheet" href="/static/css/design-system.css" />
+    <style>
+      /* Login Page Specific Styles */
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: var(--space-xl);
+        position: relative;
+        overflow: hidden;
+      }
+
+      /* Animated Background Grid */
+      .bg-grid {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image:
+          linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: gridMove 20s linear infinite;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      @keyframes gridMove {
+        0% {
+          transform: translate(0, 0);
+        }
+        100% {
+          transform: translate(50px, 50px);
+        }
+      }
+
+      /* Floating Orbs */
+      .orb {
+        position: fixed;
+        border-radius: 50%;
+        filter: blur(80px);
+        opacity: 0.3;
+        pointer-events: none;
+        z-index: 0;
+        animation: float 20s ease-in-out infinite;
+      }
+
+      .orb-1 {
+        width: 400px;
+        height: 400px;
+        background: var(--color-primary);
+        top: -200px;
+        left: -200px;
+        animation-delay: 0s;
+      }
+
+      .orb-2 {
+        width: 300px;
+        height: 300px;
+        background: var(--color-secondary);
+        bottom: -150px;
+        right: -150px;
+        animation-delay: 5s;
+      }
+
+      .orb-3 {
+        width: 250px;
+        height: 250px;
+        background: var(--color-accent);
+        top: 50%;
+        left: 50%;
+        animation-delay: 10s;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translate(0, 0) scale(1);
+        }
+        33% {
+          transform: translate(30px, -30px) scale(1.1);
+        }
+        66% {
+          transform: translate(-30px, 30px) scale(0.9);
+        }
+      }
+
+      /* Login Container */
+      .login-container {
+        position: relative;
+        z-index: 1;
+        width: 100%;
+        max-width: 480px;
+        animation: slideUp 0.6s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .login-card {
+        background: rgba(20, 25, 37, 0.8);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-xl);
+        padding: var(--space-3xl);
+        box-shadow:
+          var(--shadow-lg),
+          0 0 0 1px rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .login-header {
+        text-align: center;
+        margin-bottom: var(--space-2xl);
+      }
+
+      .login-logo {
+        font-size: 4rem;
+        margin-bottom: var(--space-lg);
+        animation: pulse 2s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+
+      .login-title {
+        font-size: 2rem;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: var(--space-sm);
+      }
+
+      .login-subtitle {
+        color: var(--color-text-secondary);
+        font-size: 0.9375rem;
+      }
+
+      .login-form {
+        margin-bottom: var(--space-xl);
+      }
+
+      .form-group {
+        margin-bottom: var(--space-lg);
+      }
+
+      .form-input {
+        transition: all var(--transition-base);
+      }
+
+      .form-input:focus {
+        transform: translateY(-2px);
+      }
+
+      .login-footer {
+        text-align: center;
+        padding-top: var(--space-xl);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .login-footer p {
+        font-size: 0.875rem;
+        color: var(--color-text-tertiary);
+        margin: 0;
+      }
+
+      .error-message {
+        background: rgba(239, 68, 68, 0.1);
+        border: 1px solid var(--color-error);
+        color: var(--color-error);
+        padding: var(--space-md);
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-lg);
+        display: none;
+        animation: shake 0.5s;
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-10px);
+        }
+        75% {
+          transform: translateX(10px);
+        }
+      }
+
+      .error-message.show {
+        display: block;
+      }
+
+      /* Loading State */
+      .btn-loading {
+        position: relative;
+        pointer-events: none;
+        color: transparent !important;
+      }
+
+      .btn-loading::after {
+        content: "";
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        top: 50%;
+        left: 50%;
+        margin-left: -8px;
+        margin-top: -8px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+      }
+
+      /* Responsive */
+      @media (max-width: 640px) {
+        .login-card {
+          padding: var(--space-2xl);
+        }
+
+        .login-title {
+          font-size: 1.75rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Background Elements -->
+    <div class="bg-grid"></div>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <!-- Login Container -->
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-header">
+          <div class="login-logo">📍</div>
+          <h1 class="login-title">GeoTrack Analytics</h1>
+          <p class="login-subtitle">Privacy-first website analytics platform</p>
+        </div>
+
+        <div id="error-message" class="error-message"></div>
+
+        <form id="login-form" class="login-form">
+          <div class="form-group">
+            <label for="email" class="form-label">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              class="form-input"
+              placeholder="admin@geotrack.com"
+              required
+              autocomplete="email"
+              autofocus
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password" class="form-label">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              class="form-input"
+              placeholder="••••••••"
+              required
+              autocomplete="current-password"
+            />
+          </div>
+
+          <div class="form-group">
+            <label class="form-check">
+              <input type="checkbox" id="remember" class="form-check-input" />
+              <span class="form-check-label">Remember me</span>
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-lg w-full">
+            Sign In
+          </button>
+        </form>
+
+        <div class="login-footer">
+          <p>&copy; 2026 GeoTrack Analytics. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="/static/js/api-client.js"></script>
+    <script>
+      const form = document.getElementById("login-form");
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const errorMessage = document.getElementById("error-message");
+
+      // Pre-fill default credentials for demo
+      if (
+        window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
+      ) {
+        document.getElementById("email").value = "admin@geotrack.com";
+        document.getElementById("password").value = "Admin@123456";
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        // Show loading state
+        submitBtn.classList.add("btn-loading");
+        submitBtn.textContent = "Signing in...";
+        errorMessage.classList.remove("show");
+
+        try {
+          await API.login(email, password);
+
+          // Success - redirect based on Role
+          const user = API.getUser(); // User info get karein
+          
+          if (user && user.role === 'admin') {
+            // Agar Admin hai to Admin Dashboard par bhejo
+            window.location.href = "/templates/dashboard.html";
+          } else {
+            // Warna Normal Analytics page par
+            window.location.href = "/templates/overview.html";
+          }
+        } catch (error) {
+          // Show error
+          errorMessage.textContent =
+            error.message || "Invalid email or password";
+          errorMessage.classList.add("show");
+
+          // Reset button
+          submitBtn.classList.remove("btn-loading");
+          submitBtn.textContent = "Sign In";
+
+          // Clear password field
+          document.getElementById("password").value = "";
+          document.getElementById("password").focus();
+        }
+      });
+
+      // Clear error on input
+      [
+        document.getElementById("email"),
+        document.getElementById("password"),
+      ].forEach((input) => {
+        input.addEventListener("input", () => {
+          errorMessage.classList.remove("show");
+        });
+      });
+
+      // Add keyboard shortcut (Alt+L to focus email)
+      document.addEventListener("keydown", (e) => {
+        if (e.altKey && e.key === "l") {
+          e.preventDefault();
+          document.getElementById("email").focus();
+        }
+      });
+    </script>
+  </body>
+</html>
