@@ -82,7 +82,7 @@
         
         <div style="margin-top: auto; padding-top: var(--space-8); border-top: 1px solid rgba(255, 255, 255, 0.05);">
             <div style="display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4);">
-                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--gradient-primary); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;" id="user-avatar">
                     A
                 </div>
                 <div style="flex: 1;">
@@ -103,7 +103,7 @@
         <header style="margin-bottom: var(--space-8);">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 style="margin-bottom: var(--space-2);">Sites Management</h1>
+                    <h1 style="margin-bottom: var(--space-2);">🌐 Sites Management</h1>
                     <p style="color: var(--color-text-secondary); margin: 0;">Manage tracked websites and generate tracking codes</p>
                 </div>
                 <button class="btn btn-primary" onclick="showCreateSiteModal()">
@@ -157,31 +157,50 @@
     </main>
 
     <!-- Create Site Modal -->
-    <div id="create-site-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: var(--z-modal); align-items: center; justify-content: center;">
+    <div id="create-site-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: var(--z-modal); align-items: center; justify-content: center;">
         <div class="card" style="max-width: 500px; width: 90%;">
-            <h3 style="margin-bottom: var(--space-6);">Add New Site</h3>
-            
+            <h3 style="margin-bottom: var(--space-6);">➕ Add New Site</h3>
             <form id="create-site-form">
                 <div class="form-group">
                     <label class="form-label">Site Name</label>
                     <input type="text" id="new-site-name" class="form-input" placeholder="My Website" required>
                 </div>
-                
                 <div class="form-group">
                     <label class="form-label">Domain</label>
                     <input type="text" id="new-site-domain" class="form-input" placeholder="example.com" required>
                 </div>
-                
-                <div class="flex gap-3" style="justify-content: flex-end;">
+                <div class="flex gap-3" style="justify-content: flex-end; margin-top: var(--space-6);">
                     <button type="button" class="btn btn-secondary" onclick="hideCreateSiteModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Site</button>
+                    <button type="submit" class="btn btn-primary" id="create-btn">Create Site</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Delete Confirm Modal -->
+    <div id="delete-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: var(--z-modal); align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 450px; width: 90%;">
+            <h3 style="margin-bottom: var(--space-4); color: #ef4444;">🗑️ Delete Site</h3>
+            <p style="color: var(--color-text-secondary); margin-bottom: var(--space-2);">
+                Are you sure you want to delete:
+            </p>
+            <p style="font-weight: 700; font-size: 1.1rem; margin-bottom: var(--space-2);" id="delete-site-name">-</p>
+            <p style="color: #ef4444; font-size: 0.875rem; margin-bottom: var(--space-6);">
+                ⚠️ This will permanently delete all events, visitors, and analytics data for this site.
+            </p>
+            <div class="flex gap-3" style="justify-content: flex-end;">
+                <button class="btn btn-secondary" onclick="hideDeleteModal()">Cancel</button>
+                <button class="btn btn-danger" id="confirm-delete-btn" onclick="confirmDelete()">
+                    🗑️ Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script src="../static/js/api-client.js"></script>
     <script>
+        let siteToDelete = null;
+
         async function initPage() {
             if (!API.requireAuth()) return;
             if (!API.isAdmin()) {
@@ -189,7 +208,19 @@
                 window.location.href = 'overview.html';
                 return;
             }
+            await loadUserProfile();
             await loadSites();
+        }
+
+        async function loadUserProfile() {
+            try {
+                const user = await API.getCurrentUser();
+                document.getElementById('user-email').textContent = user.email || 'User';
+                document.getElementById('user-role').textContent = (user.role || 'user').toUpperCase();
+                document.getElementById('user-avatar').textContent = (user.email || 'U')[0].toUpperCase();
+            } catch (error) {
+                console.error('Profile load error:', error);
+            }
         }
 
         async function loadSites() {
@@ -198,25 +229,36 @@
                 
                 // Update stats
                 document.getElementById('stat-total').textContent = data.length;
-                document.getElementById('stat-active').textContent = data.filter(s => s.status === 'connected').length;
-                document.getElementById('stat-events').textContent = API.formatNumber(
-                    data.reduce((sum, s) => sum + (s.total_events || 0), 0)
-                );
+                document.getElementById('stat-active').textContent = 
+                    data.filter(s => s.status === 'connected').length;
+                document.getElementById('stat-events').textContent = 
+                    API.formatNumber(data.reduce((sum, s) => sum + (s.total_events || 0), 0));
 
-                // Update table
                 const tbody = document.getElementById('sites-table-body');
+
                 if (!data || data.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--color-text-tertiary);">No sites found. Click "Add Site" to get started.</td></tr>';
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: var(--space-8); color: var(--color-text-tertiary);">
+                                No sites found. Click "Add Site" to get started.
+                            </td>
+                        </tr>`;
                     return;
                 }
 
                 tbody.innerHTML = data.map(site => {
                     const statusColors = {
-                        pending: 'warning',
-                        connected: 'success',
+                        pending:      'warning',
+                        connected:    'success',
                         disconnected: 'error'
                     };
-                    
+
+                    // ✅ FIX: Use public_key instead of site_key
+                    const siteKey = site.public_key || site.site_key || 'N/A';
+                    const shortKey = siteKey.length > 25 
+                        ? siteKey.substring(0, 25) + '...' 
+                        : siteKey;
+
                     return `
                         <tr>
                             <td>
@@ -227,26 +269,34 @@
                             </td>
                             <td>
                                 <div style="display: flex; align-items: center; gap: var(--space-2);">
-                                    <code style="font-size: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${site.site_key}</code>
-                                    <button class="btn btn-sm btn-ghost" onclick="API.copyToClipboard('${site.site_key}')" title="Copy site key">
+                                    <code style="font-size: 0.75rem;" title="${siteKey}">${shortKey}</code>
+                                    <button 
+                                        class="btn btn-sm btn-ghost" 
+                                        onclick="copyKey('${siteKey}')" 
+                                        title="Copy site key">
                                         📋
                                     </button>
                                 </div>
                             </td>
                             <td>
                                 <span class="badge badge-${statusColors[site.status] || 'secondary'}">
-                                    ${site.status}
+                                    ${site.status || 'unknown'}
                                 </span>
                             </td>
                             <td><strong>${API.formatNumber(site.total_events || 0)}</strong></td>
                             <td style="font-size: 0.875rem;">${API.formatDate(site.created_at)}</td>
                             <td>
                                 <div style="display: flex; gap: var(--space-2);">
-                                    <button class="btn btn-sm btn-secondary" onclick="viewIntegration(${site.id})" title="View integration">
+                                    <button 
+                                        class="btn btn-sm btn-secondary" 
+                                        onclick="viewIntegration(${site.id})" 
+                                        title="View integration code">
                                         🔌
                                     </button>
-                                    <button class="btn btn-sm btn-danger" onclick="deleteSite(${site.id}, '${site.domain}')">
-                                        Delete
+                                    <button 
+                                        class="btn btn-sm btn-danger" 
+                                        onclick="showDeleteModal(${site.id}, '${(site.domain || '').replace(/'/g, "\\'")}')">
+                                        🗑️ Delete
                                     </button>
                                 </div>
                             </td>
@@ -260,8 +310,26 @@
             }
         }
 
+        // ✅ Copy site key to clipboard
+        function copyKey(key) {
+            navigator.clipboard.writeText(key)
+                .then(() => API.showToast('Site key copied!', 'success'))
+                .catch(() => {
+                    // Fallback
+                    const el = document.createElement('textarea');
+                    el.value = key;
+                    document.body.appendChild(el);
+                    el.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(el);
+                    API.showToast('Site key copied!', 'success');
+                });
+        }
+
+        // ✅ Create Site Modal
         function showCreateSiteModal() {
             document.getElementById('create-site-modal').style.display = 'flex';
+            document.getElementById('new-site-name').focus();
         }
 
         function hideCreateSiteModal() {
@@ -272,36 +340,81 @@
         document.getElementById('create-site-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
+            const btn = document.getElementById('create-btn');
+            btn.disabled = true;
+            btn.textContent = 'Creating...';
+
             try {
                 const siteData = {
-                    name: document.getElementById('new-site-name').value,
-                    domain: document.getElementById('new-site-domain').value,
-                    client_id: 1  // Default client
+                    name:      document.getElementById('new-site-name').value.trim(),
+                    domain:    document.getElementById('new-site-domain').value.trim(),
+                    client_id: 1
                 };
 
                 await API.createSite(siteData);
+                API.showToast('Site created successfully!', 'success');
                 hideCreateSiteModal();
                 await loadSites();
+
             } catch (error) {
                 console.error('Create site error:', error);
                 API.showToast(error.message || 'Failed to create site', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Create Site';
             }
         });
 
-        async function deleteSite(id, domain) {
-            API.confirm(`Are you sure you want to delete site: ${domain}? This will delete all associated events.`, async () => {
-                try {
-                    await API.deleteSite(id);
-                    await loadSites();
-                } catch (error) {
-                    API.showToast('Failed to delete site', 'error');
-                }
-            });
+        // ✅ FIXED Delete Flow
+        function showDeleteModal(siteId, siteDomain) {
+            siteToDelete = siteId;
+            document.getElementById('delete-site-name').textContent = siteDomain;
+            document.getElementById('delete-modal').style.display = 'flex';
         }
 
+        function hideDeleteModal() {
+            siteToDelete = null;
+            document.getElementById('delete-modal').style.display = 'none';
+        }
+
+        async function confirmDelete() {
+            if (!siteToDelete) {
+                API.showToast('No site selected', 'error');
+                return;
+            }
+        
+            const btn = document.getElementById('confirm-delete-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Deleting...';
+        
+            try {
+                // Direct fetch ki jagah API client use karein taake auth automatically handle ho
+                await API.deleteSite(siteToDelete); 
+                
+                API.showToast('✅ Site deleted successfully!', 'success');
+                hideDeleteModal();
+                await loadSites();
+        
+            } catch (error) {
+                console.error('❌ Delete failed:', error);
+                API.showToast(error.message || 'Failed to delete site', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🗑️ Delete';
+            }
+        }
         function viewIntegration(siteId) {
             window.location.href = `integration.html?site=${siteId}`;
         }
+
+        // Close modals on background click
+        document.getElementById('create-site-modal').addEventListener('click', function(e) {
+            if (e.target === this) hideCreateSiteModal();
+        });
+
+        document.getElementById('delete-modal').addEventListener('click', function(e) {
+            if (e.target === this) hideDeleteModal();
+        });
 
         document.addEventListener('DOMContentLoaded', initPage);
     </script>
