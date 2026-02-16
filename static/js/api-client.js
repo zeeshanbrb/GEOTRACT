@@ -16,10 +16,10 @@ class GeoTrackAPI {
     detectBaseUrl() {
         // If running on localhost, use localhost:8000
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            return 'http://localhost:8000';
+            return 'https://unhypothecated-archer-unmovingly.ngrok-free.dev';
         }
         // In production, use same origin (empty string means relative URLs)
-        return '';
+        return 'https://unhypothecated-archer-unmovingly.ngrok-free.dev';
     }
 
     // ============================================
